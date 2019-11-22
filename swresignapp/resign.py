@@ -9,12 +9,14 @@ __author__ = 'shede333'
 
 """
 
+import re
 import shutil
 import subprocess
 import tempfile
 from pathlib import Path
 
 from mobileprovision import MobileProvisionModel
+from mobileprovision import util as mputil
 
 from . import codesign
 from . import security
@@ -52,9 +54,34 @@ def safe_ipa_path(name_prefix, dst_dir):
     return ipa_path
 
 
-def resign(app_path, mobileprovision_path, sign=None, entitlements_path=None, is_show_ipa=False):
+def parse_mobileprovision(mobileprovision_info):
+    if mobileprovision_info.endswith(mputil.MP_EXT_NAME):
+        return MobileProvisionModel(mobileprovision_info)
+
+    result = re.match(r"^([a-zA-Z]+):(.+)$", mobileprovision_info.strip())
+    if result:
+        matched_list = []
+        p_name, p_value = map(lambda x: x.strip(), result.groups())
+        for mp_path in mputil.mp_path_in_dir(mputil.MP_ROOT_PATH):
+            mp_model = MobileProvisionModel(mp_path)
+            if mp_model[p_name] == p_value:
+                matched_list.append(mp_model)
+        # 按照创建时间，从新到旧
+        matched_list = sorted(matched_list, key=lambda x: x.creation_timestamp, reverse=True)
+        if matched_list:
+            used_model = matched_list[0]
+            plog("\n根据'{}: {}', 使用mobileprovision：{}".format(p_name, p_value, used_model.file_path))
+            return used_model
+        else:
+            raise Exception("根据'{}: {}', 无法找到对应的mobileprovision文件，\n查找路径：{}".format(p_name, p_value,
+                                                                                    mputil.MP_ROOT_PATH))
+    else:
+        raise Exception("无法识别mobileprovision:", mobileprovision_info)
+
+
+def resign(app_path, mobileprovision_info, sign=None, entitlements_path=None, is_show_ipa=False):
     app_path = Path(app_path)
-    mp_model = MobileProvisionModel(mobileprovision_path)
+    mp_model = parse_mobileprovision(mobileprovision_info)
     if not mp_model.date_is_valid():
         raise Exception("mobileprovision 已过期")
     id_model_list = security.security_find_identity()
@@ -80,7 +107,7 @@ def resign(app_path, mobileprovision_path, sign=None, entitlements_path=None, is
 
     with tempfile.TemporaryDirectory() as temp_dir_path:
         ws_dir_path = Path(temp_dir_path)
-        plog("临时工作目录:", ws_dir_path)
+        plog("\n临时工作目录:", ws_dir_path)
         if not entitlements_path:
             # 从mobileprovision文件里提取 entitlements.plist文件
             entitlements_path = ws_dir_path.joinpath("entitlements.plist")
@@ -94,7 +121,7 @@ def resign(app_path, mobileprovision_path, sign=None, entitlements_path=None, is
         shutil.copytree(app_path, dst_app_path)
         # 嵌入mobileprovision文件
         dst_mp_path = dst_app_path.joinpath("embedded.mobileprovision")
-        src_mp_path = Path(mobileprovision_path)
+        src_mp_path = mp_model.file_path
         if src_mp_path and src_mp_path.is_file() and (dst_mp_path != src_mp_path):
             shutil.copy(src_mp_path, dst_mp_path)
 

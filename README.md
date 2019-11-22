@@ -25,6 +25,12 @@ resign(app_path, mobileprovision_path)
 # is_show_ipa: 重签完成后，使用Finder打开ipa文件所在目录
 resign(app_path, mobileprovision_path, is_show_ipa=True)
 
+# 到系统路径（~/Library/MobileDevice/Provisioning Profiles），查找"Name"属性为"dev-hello"的最新的mobileprovision文件
+resign(app_path, "Name:dev-hello")
+
+# 到系统路径（~/Library/MobileDevice/Provisioning Profiles），查找"UUID"属性为"a4adb1bd-948f-1234-5678-79628e8ce280"的最新的mobileprovision文件
+resign(app_path, "UUID:a4adb1bd-948f-1234-5678-79628e8ce280")
+
 # 使用是在的sign和entitlements信息重签名
 entitlements_path = "~/Desktop/entitlements.plist"
 sign = "40位长签名证书的SHA1字符串，例如：ABC5F4F03263A3A29F0BC84910303364E0123456"

@@ -16,8 +16,8 @@ def parse_arg():
 
     parser.set_defaults(func=resign)
     parser.add_argument("app_path", help=".app文件路径")
-    parser.add_argument("-m", "--mobileprovision", dest="mobileprovision_path", required=True,
-                        help="mobileprovision文件路径")
+    parser.add_argument("-m", "--mobileprovision", dest="mobileprovision_info", required=True,
+                        help="mobileprovision文件路径,或者Name属性,或者UUID属性")
     parser.add_argument("-s", "--sign", help="(可选)签名证书的 SHA1或者name")
     parser.add_argument("-e", "--entitlements-path", help="(可选)entitlements环境plist文件")
     parser.add_argument("-q", "--quiet", action='store_true', help="是否隐藏print信息")
