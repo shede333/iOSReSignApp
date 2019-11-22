@@ -23,7 +23,7 @@ from .util import plog
 
 
 def zip_payload(payload_path, ipa_path):
-    command = "zip -r '{}' 'Payload'".format(ipa_path, payload_path)
+    command = "zip -r '{}' 'Payload'".format(Path(ipa_path).resolve(), payload_path)
     plog(command)
     if util.IS_QUIET:
         subprocess.check_output(command, shell=True, cwd=payload_path.parent)
@@ -38,13 +38,14 @@ def safe_ipa_path(name_prefix, dst_dir):
     :param dst_dir: ipa文件存放的目录
     :return: 路径对象
     """
+    dst_dir = Path(dst_dir).resolve()
     name_index = 0
     while True:
         if name_index > 0:
             ipa_name = "{}-{}.ipa".format(name_prefix, name_index)
         else:
             ipa_name = "{}.ipa".format(name_prefix)
-        ipa_path = Path(dst_dir).joinpath(ipa_name)
+        ipa_path = dst_dir.joinpath(ipa_name)
         if not ipa_path.is_file():
             break
         name_index += 1
@@ -53,8 +54,9 @@ def safe_ipa_path(name_prefix, dst_dir):
 
 def resign(app_path, mobileprovision_path, sign=None, entitlements_path=None, is_show_ipa=False):
     app_path = Path(app_path)
-
     mp_model = MobileProvisionModel(mobileprovision_path)
+    if not mp_model.date_is_valid():
+        raise Exception("mobileprovision 已过期")
     id_model_list = security.security_find_identity()
     valid_sha1_set = set((tmp_model.sha1 for tmp_model in id_model_list if tmp_model.is_valid))
     if not valid_sha1_set:
