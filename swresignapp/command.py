@@ -20,6 +20,7 @@ def parse_arg():
                         help="mobileprovision文件路径,或者Name属性,或者UUID属性")
     parser.add_argument("-s", "--sign", help="(可选)签名证书的 SHA1或者name")
     parser.add_argument("-e", "--entitlements-path", help="(可选)entitlements环境plist文件")
+    parser.add_argument("-o", "--output-ipa-path", help="(可选)ipa文件输出路径，不传此值则输出到.app同级目录下")
     parser.add_argument("-q", "--quiet", action='store_true', help="是否隐藏print信息")
     parser.add_argument("--show-ipa", dest="is_show_ipa", action='store_true',
                         help="是否打开Finder显示最终的ipa文件")

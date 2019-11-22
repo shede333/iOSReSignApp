@@ -79,7 +79,8 @@ def parse_mobileprovision(mobileprovision_info):
         raise Exception("无法识别mobileprovision:", mobileprovision_info)
 
 
-def resign(app_path, mobileprovision_info, sign=None, entitlements_path=None, is_show_ipa=False):
+def resign(app_path, mobileprovision_info, sign=None, entitlements_path=None, output_ipa_path=None,
+           is_show_ipa=False):
     app_path = Path(app_path)
     mp_model = parse_mobileprovision(mobileprovision_info)
     if not mp_model.date_is_valid():
@@ -129,10 +130,13 @@ def resign(app_path, mobileprovision_info, sign=None, entitlements_path=None, is
         codesign.cs_app(dst_app_path, entitlements_path)
 
         plog("\n开始 zip *.app to *.ipa")
-        ipa_path = safe_ipa_path(app_path.stem, app_path.parent)
-        zip_payload(payload_path, ipa_path)
+        if output_ipa_path:
+            output_ipa_path = Path(output_ipa_path).resolve()
+        else:
+            output_ipa_path = safe_ipa_path(app_path.stem, app_path.parent)
+        zip_payload(payload_path, output_ipa_path)
 
-    plog("\n* 重签名resign 成功！\nipa产物: {}".format(ipa_path))
+    plog("\n* 重签名resign 成功！\nipa产物: {}".format(output_ipa_path))
     if is_show_ipa:
-        command = "open '{}'".format(ipa_path.parent)
+        command = "open '{}'".format(output_ipa_path.parent)
         subprocess.call(command, shell=True)
