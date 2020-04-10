@@ -7,7 +7,7 @@
 
 ```
 
-pip install iOSReSignApp
+pip3 install iOSReSignApp
 
 ```
 
