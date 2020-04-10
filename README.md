@@ -1,6 +1,7 @@
 # iOSReSignApp
 
-> 对'.app/.ipa'文件，进行重签名
+> 对'.app/.ipa'文件，进行重签名；  
+> 注意：仅支持 Python3；
 
 ## 安装 Install
 
