@@ -1,12 +1,12 @@
-# SWReSignApp
+# iOSReSignApp
 
-重签名.app文件；
+> 对'.app/.ipa'文件，进行重签名
 
 ## 安装 Install
 
 ```
 
-pip install SWReSignApp
+pip install iOSReSignApp
 
 ```
 
@@ -14,7 +14,7 @@ pip install SWReSignApp
 
 ```python
 
-from swresignapp import resign
+from iosresignapp import resign
 
 app_path = "~/Desktop/hello.app"
 mobileprovision_path = "~/Desktop/hello.mobileprovision"
@@ -43,14 +43,14 @@ resign(app_path, mobileprovision_path, sign=sign, entitlements_path=entitlements
 
 ```shell
 
-swresignapp -h 
+iosresignapp -h 
 
-usage: App文件重签名 [-h] -m MOBILEPROVISION_PATH [-s SIGN] [-e ENTITLEMENTS_PATH]
-                [-q] [--show-ipa]
+usage: 对'.app/.ipa'文件，进行重签名 [-h] -m MOBILEPROVISION_PATH [-s SIGN] [-e ENTITLEMENTS_PATH]
+                [-q] [-S]
                 app_path
 
 positional arguments:
-  app_path              .app文件路径
+  app_path              '.app/.ipa'文件路径
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -60,7 +60,7 @@ optional arguments:
   -e ENTITLEMENTS_PATH, --entitlements-path ENTITLEMENTS_PATH
                         (可选)entitlements环境plist文件
   -q, --quiet           是否隐藏print信息
-  --show-ipa            是否打开Finder显示最终的ipa文件
+  -S, --show-ipa            是否打开Finder显示最终的ipa文件
 
 
 ```
@@ -69,4 +69,5 @@ optional arguments:
 ## 待完成的功能
 
 * 检测.app文件里可执行文件是否已经 加壳/砸过壳;
-* 支持App的扩展，例如watch, today等;
+* 优化codesign命令输出的log信息;
+* ~~支持App的扩展，例如watch, today等~~;

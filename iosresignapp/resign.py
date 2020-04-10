@@ -16,12 +16,13 @@ import tempfile
 from pathlib import Path
 
 from mobileprovision import MobileProvisionModel
-from mobileprovision import util as mputil
+from mobileprovision import util as mp_util
 
 from . import codesign
 from . import security
 from . import util
 from .util import plog
+from .info_plist import InfoPlistModel
 
 
 def zip_payload(payload_path, ipa_path):
@@ -55,14 +56,19 @@ def safe_ipa_path(name_prefix, dst_dir):
 
 
 def parse_mobileprovision(mobileprovision_info):
-    if mobileprovision_info.endswith(mputil.MP_EXT_NAME):
+    """
+    解析出mobileprovision信息
+    :param mobileprovision_info: mobileprovision文件路径,或者Name属性,或者UUID属性
+    :return:
+    """
+    if mobileprovision_info.endswith(mp_util.MP_EXT_NAME):
         return MobileProvisionModel(mobileprovision_info)
 
     result = re.match(r"^([a-zA-Z]+):(.+)$", mobileprovision_info.strip())
     if result:
         matched_list = []
         p_name, p_value = map(lambda x: x.strip(), result.groups())
-        for mp_path in mputil.mp_path_in_dir(mputil.MP_ROOT_PATH):
+        for mp_path in mp_util.mp_path_in_dir(mp_util.MP_ROOT_PATH):
             mp_model = MobileProvisionModel(mp_path)
             if mp_model[p_name] == p_value:
                 matched_list.append(mp_model)
@@ -73,8 +79,9 @@ def parse_mobileprovision(mobileprovision_info):
             plog("\n根据'{}: {}', 使用mobileprovision：{}".format(p_name, p_value, used_model.file_path))
             return used_model
         else:
-            raise Exception("根据'{}: {}', 无法找到对应的mobileprovision文件，\n查找路径：{}".format(p_name, p_value,
-                                                                                    mputil.MP_ROOT_PATH))
+            e_info1 = "根据'{}: {}', 无法找到对应的mobileprovision文件".format(p_name, p_value)
+            e_info2 = "查找路径：{}".format(mp_util.MP_ROOT_PATH)
+            raise Exception("\n".join([e_info1, e_info2]))
     else:
         raise Exception("无法识别mobileprovision:", mobileprovision_info)
 
@@ -82,9 +89,12 @@ def parse_mobileprovision(mobileprovision_info):
 def resign(app_path, mobileprovision_info, sign=None, entitlements_path=None, output_ipa_path=None,
            is_show_ipa=False):
     app_path = Path(app_path)
+
+    # 解析mobileprovision文件里的有效信息
     mp_model = parse_mobileprovision(mobileprovision_info)
     if not mp_model.date_is_valid():
         raise Exception("mobileprovision 已过期")
+    # 查找p12文件的签名ID：sha1
     id_model_list = security.security_find_identity()
     valid_sha1_set = set((tmp_model.sha1 for tmp_model in id_model_list if tmp_model.is_valid))
     if not valid_sha1_set:
@@ -106,28 +116,67 @@ def resign(app_path, mobileprovision_info, sign=None, entitlements_path=None, ou
         else:
             raise Exception("钥匙串里，不存在有效的mobileprovision里的cer证书")
 
+    # 创建临时工作目录，将.app文件解压到此处，并重签名、打包操作
     with tempfile.TemporaryDirectory() as temp_dir_path:
         ws_dir_path = Path(temp_dir_path)
         plog("\n临时工作目录:", ws_dir_path)
         if not entitlements_path:
-            # 从mobileprovision文件里提取 entitlements.plist文件
+            plog("\n* 从mobileprovision文件里提取 entitlements.plist文件")
             entitlements_path = ws_dir_path.joinpath("entitlements.plist")
             mp_model.export_entitlements_file(entitlements_path)
-            plog("\n* 从mobileprovision文件里提取 entitlements.plist文件")
-        # 创建Payload目录
+
         payload_path = ws_dir_path.joinpath("Payload")
-        payload_path.mkdir()
-        dst_app_path = payload_path.joinpath(app_path.name)
-        # 赋值.app文件
-        shutil.copytree(app_path, dst_app_path)
+        ext_name = app_path.suffix.lower()
+        if ext_name == ".ipa":
+            # 解压ipa文到 工作目录下
+            command = "unzip -oqq '{}' -d '{}'".format(app_path, ws_dir_path)
+            plog("\n" + command)
+            subprocess.check_call(command, shell=True)
+            assert payload_path.is_dir()
+            all_sub_app = list(payload_path.glob("*.app"))
+            assert len(all_sub_app) == 1
+            dst_app_path = all_sub_app[0]
+        elif ext_name == ".app":
+            # 创建Payload目录
+            payload_path.mkdir()
+            dst_app_path = payload_path.joinpath(app_path.name)
+            # 复制.app文件到此处
+            shutil.copytree(app_path, dst_app_path)
+        else:
+            raise Exception("不支持此文件类型: {}".format(app_path))
+        plog("dst_app_path: {}".format(dst_app_path))
+
+        # 检测App的BundleID 与 mobileprovision里的BundleID 是否一致
+        info_model = InfoPlistModel(dst_app_path.joinpath("Info.plist"))
+        inner_bundle_id = info_model.bundle_id
+        mp_app_id = mp_model.app_id()
+        if inner_bundle_id != mp_app_id:
+            # 重新设置App的BundleID
+            plog("\n* 修改 BundleID from '{}', to '{}'".format(inner_bundle_id, mp_app_id))
+            info_model.bundle_id = mp_app_id
+
         # 嵌入mobileprovision文件
         dst_mp_path = dst_app_path.joinpath("embedded.mobileprovision")
         src_mp_path = mp_model.file_path
-        if src_mp_path and src_mp_path.is_file() and (dst_mp_path != src_mp_path):
+        if src_mp_path and src_mp_path.is_file() and (not src_mp_path.samefile(dst_mp_path)):
+            plog("\n替换embedded.mobileprovision文件：{}".format(src_mp_path))
             shutil.copy(src_mp_path, dst_mp_path)
 
-        plog("\n开始 重签名resign：")
-        codesign.cs_app(dst_app_path, entitlements_path)
+        # 给MachO可执行文件加上 执行权限
+        command = "chmod +x '{}'".format(info_model.exec_path)
+        plog("\n" + command)
+        subprocess.check_call(command, shell=True)
+
+        # 删除extension和Watch，个人证书没法签名这些东西
+        plugins_path = dst_app_path.joinpath("PlugIns")
+        watch_path = dst_app_path.joinpath("Watch")
+        for tmp_path in [plugins_path, watch_path]:
+            if tmp_path.is_dir():
+                plog("- 删除：{}".format(tmp_path))
+                shutil.rmtree(tmp_path)
+
+        plog("\n开始 重签名resign App+Framework：")
+        codesign.cs_app(dst_app_path, sign, entitlements_path)
 
         plog("\n开始 zip *.app to *.ipa")
         if output_ipa_path:
