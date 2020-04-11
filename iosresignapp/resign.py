@@ -34,20 +34,25 @@ def zip_payload(payload_path, ipa_path):
         subprocess.check_call(command, shell=True, cwd=payload_path.parent)
 
 
-def safe_ipa_path(name_prefix, dst_dir):
+def safe_ipa_path(name_prefix, dst_dir, name_suffix=None):
     """
     获取ipa文件路径，保证此路径不指向任何文件；
     :param name_prefix: 文件名前缀（不包含扩展名）
     :param dst_dir: ipa文件存放的目录
+    :param name_suffix: （可选）文件名后缀
     :return: 路径对象
     """
+    if name_suffix:
+        pure_name = "{}-{}".format(name_prefix, name_suffix)
+    else:
+        pure_name = name_prefix
     dst_dir = Path(dst_dir).resolve()
     name_index = 0
     while True:
         if name_index > 0:
-            ipa_name = "{}-{}.ipa".format(name_prefix, name_index)
+            ipa_name = "{}-{}.ipa".format(pure_name, name_index)
         else:
-            ipa_name = "{}.ipa".format(name_prefix)
+            ipa_name = "{}.ipa".format(pure_name)
         ipa_path = dst_dir.joinpath(ipa_name)
         if not ipa_path.is_file():
             break
@@ -87,8 +92,12 @@ def parse_mobileprovision(mobileprovision_info):
 
 
 def resign(app_path, mobileprovision_info, sign=None, entitlements_path=None, output_ipa_path=None,
-           is_show_ipa=False):
+           is_show_ipa=False, re_suffix_name=None):
     app_path = Path(app_path)
+
+    # 处理冲突参数
+    if output_ipa_path and re_suffix_name:
+        raise Exception("不能同时设置： output_ipa_path 与 re_suffix_name ")
 
     # 解析mobileprovision文件里的有效信息
     mp_model = parse_mobileprovision(mobileprovision_info)
@@ -182,7 +191,7 @@ def resign(app_path, mobileprovision_info, sign=None, entitlements_path=None, ou
         if output_ipa_path:
             output_ipa_path = Path(output_ipa_path).resolve()
         else:
-            output_ipa_path = safe_ipa_path(app_path.stem, app_path.parent)
+            output_ipa_path = safe_ipa_path(app_path.stem, app_path.parent, re_suffix_name)
         zip_payload(payload_path, output_ipa_path)
 
     plog("\n* 重签名resign 成功！\nipa产物: {}".format(output_ipa_path))

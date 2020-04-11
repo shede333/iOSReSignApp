@@ -14,12 +14,15 @@ def parse_arg():
     """解析命令行的输入的参数"""
     parser = argparse.ArgumentParser("对'.app/.ipa'文件，进行重签名")
 
-    parser.set_defaults(func=resign)
+    parser.set_defaults(func=resign)  # 对应的函数
+
     parser.add_argument("app_path", help="'.app/.ipa'文件路径")
     parser.add_argument("-m", "--mobileprovision", dest="mobileprovision_info", required=True,
                         help="mobileprovision文件路径,或者Name属性,或者UUID属性")
     parser.add_argument("-s", "--sign", help="(可选)签名证书的 SHA1或者name")
     parser.add_argument("-e", "--entitlements-path", help="(可选)entitlements环境plist文件")
+    parser.add_argument("--re-suffix-name", default="resign",
+                        help="(可选)重签名后的文件名后缀，如果设置了'--output-ipa-path'，此选项无效，默认为'resign'")
     parser.add_argument("-o", "--output-ipa-path", help="(可选)ipa文件输出路径，不传此值则输出到.app同级目录下")
     parser.add_argument("-q", "--quiet", action='store_true', help="是否隐藏print信息")
     parser.add_argument("-S", "--show-ipa", dest="is_show_ipa", action='store_true',

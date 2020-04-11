@@ -11,7 +11,15 @@ pip3 install iOSReSignApp
 
 ```
 
-## Example Modules:
+## CLI 使用说明
+
+```bash
+
+iosresignapp -h 
+
+```
+
+## Python Modules 使用说明
 
 ```python
 
@@ -46,22 +54,29 @@ resign(app_path, mobileprovision_path, sign=sign, entitlements_path=entitlements
 
 iosresignapp -h 
 
-usage: 对'.app/.ipa'文件，进行重签名 [-h] -m MOBILEPROVISION_PATH [-s SIGN] [-e ENTITLEMENTS_PATH]
-                [-q] [-S]
-                app_path
+usage: 对'.app/.ipa'文件，进行重签名 [-h] -m MOBILEPROVISION_INFO [-s SIGN]
+                            [-e ENTITLEMENTS_PATH]
+                            [--re-suffix-name RE_SUFFIX_NAME]
+                            [-o OUTPUT_IPA_PATH] [-q] [-S]
+                            app_path
 
 positional arguments:
   app_path              '.app/.ipa'文件路径
 
 optional arguments:
   -h, --help            show this help message and exit
-  -m MOBILEPROVISION_PATH, --mobileprovision MOBILEPROVISION_PATH
-                        mobileprovision文件路径
+  -m MOBILEPROVISION_INFO, --mobileprovision MOBILEPROVISION_INFO
+                        mobileprovision文件路径,或者Name属性,或者UUID属性
   -s SIGN, --sign SIGN  (可选)签名证书的 SHA1或者name
   -e ENTITLEMENTS_PATH, --entitlements-path ENTITLEMENTS_PATH
                         (可选)entitlements环境plist文件
+  --re-suffix-name RE_SUFFIX_NAME
+                        (可选)重签名后的文件名后缀，如果设置了'--output-ipa-
+                        path'，此选项无效，默认为'resign'
+  -o OUTPUT_IPA_PATH, --output-ipa-path OUTPUT_IPA_PATH
+                        (可选)ipa文件输出路径，不传此值则输出到.app同级目录下
   -q, --quiet           是否隐藏print信息
-  -S, --show-ipa            是否打开Finder显示最终的ipa文件
+  -S, --show-ipa        是否打开Finder显示最终的ipa文件
 
 
 ```
