@@ -22,29 +22,31 @@ def cs_verify(dir_path):
     return is_success
 
 
-def cs_info(dir_path):
+def cs_info(dir_path, is_verbose=False):
     # codesign --display --verbose --verify
     command = "codesign -d -vv '{}'".format(dir_path)
     is_success = True
     try:
-        output = subprocess.check_output(command, shell=True)
+        output = subprocess.check_output(command, shell=True, stderr=subprocess.STDOUT, text=True)
     except subprocess.CalledProcessError as e:
         is_success = False
         output = str(e)
+    if is_verbose:
+        print(command)
+        print('验证结果：{}'.format(is_success))
+        print(output)
 
     return is_success, output
 
 
 def run_codesign(dir_path, p12_id, entitlements_path=None):
     # codesign --force --sign <keychain_SHA1> --entitlements <app_path> <entitlements_path>
-    command = "codesign -fs '{}' '{}'".format(p12_id, dir_path)
+    command = "codesign -fs '{}' '{}' ".format(p12_id, dir_path)
     if entitlements_path:
         command += " --entitlements '{}'".format(entitlements_path)
     plog(command)
-    if util.IS_QUIET:
-        subprocess.check_output(command, shell=True)
-    else:
-        subprocess.check_call(command, shell=True)
+    # 实际上，这里的内容会输出终端，似乎是codesign的bug
+    subprocess.check_output(command, shell=True)
 
 
 def cs_app(app_path, p12_id, entitlements_path=None):

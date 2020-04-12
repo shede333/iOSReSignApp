@@ -186,6 +186,8 @@ def resign(app_path, mobileprovision_info, sign=None, entitlements_path=None, ou
 
         plog("\n开始 重签名resign App+Framework：")
         codesign.cs_app(dst_app_path, sign, entitlements_path)
+        plog("\n验证并显示.app的签名信息:")
+        codesign.cs_info(dst_app_path, is_verbose=True)
 
         plog("\n开始 zip *.app to *.ipa")
         if output_ipa_path:
