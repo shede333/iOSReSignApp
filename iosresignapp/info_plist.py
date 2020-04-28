@@ -19,19 +19,48 @@ class InfoPlistModel(object):
         output = subprocess.check_output(command, shell=True, text=True)
         return output and output.strip()
 
+    def get_value(self, key):
+        return self._run_command("print {}".format(key))
+
+    def set_value(self, key, value):
+        self._run_command("set :{} {}".format(key, value))
+
     @property
     def bundle_id(self):
-        return self._run_command("print CFBundleIdentifier")
+        return self.get_value("CFBundleIdentifier")
 
     @bundle_id.setter
     def bundle_id(self, value):
-        command = "set :CFBundleIdentifier {}".format(value)
-        self._run_command(command)
+        self.set_value("CFBundleIdentifier", value)
 
     @property
     def exec_name(self):
-        return self._run_command("print CFBundleExecutable")
+        return self.get_value("CFBundleExecutable")
 
     @property
     def exec_path(self):
         return Path(self.file_path).with_name(self.exec_name)
+
+    @property
+    def display_name(self):
+        return self.get_value("CFBundleDisplayName")
+
+    @display_name.setter
+    def display_name(self, value):
+        self.set_value("CFBundleDisplayName", value)
+
+    @property
+    def app_version(self):
+        return self.get_value("CFBundleShortVersionString")
+
+    @app_version.setter
+    def app_version(self, value):
+        self.set_value("CFBundleShortVersionString", value)
+
+    @property
+    def build_version(self):
+        return self.get_value("CFBundleVersion")
+
+    @build_version.setter
+    def build_version(self, value):
+        self.set_value("CFBundleVersion", value)
