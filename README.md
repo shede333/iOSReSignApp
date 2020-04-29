@@ -87,6 +87,6 @@ optional arguments:
 * 检测.app文件里可执行文件是否已经 加壳/砸过壳;
 * 优化codesign命令输出的log信息;
 * ~~支持App的扩展，例如watch, today等~~;
-* 支持修改更多Info.plist的参数;
+* ~~支持修改更多Info.plist的参数~~;
 * 支持换图标icon；
 * 支持在图标上版本号等额外信息；

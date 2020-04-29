@@ -92,7 +92,8 @@ def parse_mobileprovision(mobileprovision_info):
 
 
 def resign(app_path, mobileprovision_info, sign=None, entitlements_path=None, output_ipa_path=None,
-           is_show_ipa=False, re_suffix_name=None):
+           is_show_ipa=False, re_suffix_name=None, set_app_name=None, set_app_version=None,
+           set_app_infos=None):
     app_path = Path(app_path)
 
     # 处理冲突参数
@@ -163,6 +164,17 @@ def resign(app_path, mobileprovision_info, sign=None, entitlements_path=None, ou
             # 重新设置App的BundleID
             plog("\n* 修改 BundleID from '{}', to '{}'".format(inner_bundle_id, mp_app_id))
             info_model.bundle_id = mp_app_id
+        if set_app_infos:
+            app_infos = map(lambda x: tuple(x.split(":")), set_app_infos.split(","))
+            for tmp_key, tmp_value in app_infos:
+                plog("\n* 修改 App Info.plist {} to '{}'".format(tmp_key, tmp_value))
+                info_model.set_value(tmp_key.strip(), tmp_value.strip())
+        if set_app_name:
+            plog("\n* 修改 App Name to '{}'".format(set_app_name))
+            info_model.app_display_name = set_app_name
+        if set_app_version:
+            plog("\n* 修改 App Version to '{}'".format(set_app_version))
+            info_model.app_version = set_app_version
 
         # 嵌入mobileprovision文件
         dst_mp_path = dst_app_path.joinpath("embedded.mobileprovision")

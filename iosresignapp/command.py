@@ -18,7 +18,7 @@ def parse_arg():
 
     parser.add_argument("app_path", help="'.app/.ipa'文件路径")
     parser.add_argument("-m", "--mobileprovision", dest="mobileprovision_info", required=True,
-                        help="mobileprovision文件路径,或者Name属性,或者UUID属性")
+                        help="mobileprovision文件路径,或者Name属性,或者UUID属性，同时会根据mp文件内的appID来修改app的BundleID")
     parser.add_argument("-s", "--sign", help="(可选)签名证书的 SHA1或者name")
     parser.add_argument("-e", "--entitlements-path", help="(可选)entitlements环境plist文件")
     parser.add_argument("--re-suffix-name", default="resign",
@@ -27,6 +27,10 @@ def parse_arg():
     parser.add_argument("-q", "--quiet", action='store_true', help="是否隐藏print信息")
     parser.add_argument("-S", "--show-ipa", dest="is_show_ipa", action='store_true',
                         help="是否打开Finder显示最终的ipa文件")
+    parser.add_argument("--set-app-name", required=False, help="(可选)修改App的显示名称")
+    parser.add_argument("--set-app-version", required=False, help="(可选)修改App的版本号")
+    parser.add_argument("--set-app-infos", required=False,
+                        help="(可选)修改App的Info内的信息，多条信息以逗号分割，例如：'CFBundleVersion:1.0, CFBundleDisplayName:HelloApp'")
 
     args = parser.parse_args()
     return args

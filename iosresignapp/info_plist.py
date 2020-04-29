@@ -42,11 +42,11 @@ class InfoPlistModel(object):
         return Path(self.file_path).with_name(self.exec_name)
 
     @property
-    def display_name(self):
+    def app_display_name(self):
         return self.get_value("CFBundleDisplayName")
 
-    @display_name.setter
-    def display_name(self, value):
+    @app_display_name.setter
+    def app_display_name(self, value):
         self.set_value("CFBundleDisplayName", value)
 
     @property
