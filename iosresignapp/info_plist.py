@@ -16,7 +16,10 @@ class InfoPlistModel(object):
 
     def _run_command(self, sub_command):
         command = '/usr/libexec/PlistBuddy -c "{}" "{}"'.format(sub_command, self.file_path)
-        output = subprocess.check_output(command, shell=True, text=True)
+        try:
+            output = subprocess.check_output(command, shell=True, text=True)
+        except subprocess.CalledProcessError:
+            output = None
         return output and output.strip()
 
     def get_value(self, key):
