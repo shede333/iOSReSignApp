@@ -53,6 +53,14 @@ class InfoPlistModel(object):
         self.set_value("CFBundleDisplayName", value)
 
     @property
+    def bundle_name(self):
+        return self.get_value("CFBundleName")
+
+    @bundle_name.setter
+    def bundle_name(self, value):
+        self.set_value("CFBundleName", value)
+
+    @property
     def app_version(self):
         return self.get_value("CFBundleShortVersionString")
 
