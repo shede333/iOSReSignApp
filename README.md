@@ -90,3 +90,4 @@ optional arguments:
 * ~~支持修改更多Info.plist的参数~~;
 * 支持换图标icon；
 * 支持在图标上版本号等额外信息；
+* 屏蔽：读取info.plist信息时的错误输出；
