@@ -22,7 +22,7 @@ from . import codesign
 from . import security
 from . import util
 from .util import plog
-from .info_plist import InfoPlistModel
+from iosappinfoparser import InfoPlistModel
 
 
 def zip_payload(payload_path, ipa_path):

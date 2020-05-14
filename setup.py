@@ -15,7 +15,7 @@ print("{} - {}".format("*" * 10, find_packages()))
 
 setup(
     name='iOSReSignApp',  # 包名字
-    version='1.2.1',  # 包版本
+    version='1.3',  # 包版本
     author='shede333',  # 作者
     author_email='333wshw@163.com',  # 作者邮箱
     keywords='codesign ios resign re-sign re_sign re sign app',
@@ -29,7 +29,7 @@ setup(
             'iosresignapp=iosresignapp.command:main',
         ],
     },
-    install_requires=['PyMobileProvision~=1.1'],
+    install_requires=['PyMobileProvision~=1.1', 'iOSAppInfoParser~=1.0'],
     python_requires="~=3.6",
     classifiers=[
         "Development Status :: 5 - Production/Stable",
