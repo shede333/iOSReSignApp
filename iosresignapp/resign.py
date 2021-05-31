@@ -9,12 +9,15 @@ __author__ = 'shede333'
 
 """
 
+import json
 import re
 import shutil
 import subprocess
 import tempfile
+from concurrent.futures import ProcessPoolExecutor, as_completed
 from pathlib import Path
 
+from iosappinfoparser import InfoPlistModel
 from mobileprovision import MobileProvisionModel
 from mobileprovision import util as mp_util
 
@@ -22,7 +25,10 @@ from . import codesign
 from . import security
 from . import util
 from .util import plog
-from iosappinfoparser import InfoPlistModel
+
+
+class ResignException(Exception):
+    pass
 
 
 def zip_payload(payload_path, ipa_path):
@@ -86,9 +92,9 @@ def parse_mobileprovision(mobileprovision_info):
         else:
             e_info1 = "根据'{}: {}', 无法找到对应的mobileprovision文件".format(p_name, p_value)
             e_info2 = "查找路径：{}".format(mp_util.MP_ROOT_PATH)
-            raise Exception("\n".join([e_info1, e_info2]))
+            raise ResignException("\n".join([e_info1, e_info2]))
     else:
-        raise Exception("无法识别mobileprovision:", mobileprovision_info)
+        raise ResignException("无法识别mobileprovision:", mobileprovision_info)
 
 
 def resign(app_path, mobileprovision_info, sign=None, entitlements_path=None, output_ipa_path=None,
@@ -98,24 +104,24 @@ def resign(app_path, mobileprovision_info, sign=None, entitlements_path=None, ou
 
     # 处理冲突参数
     if output_ipa_path and re_suffix_name:
-        raise Exception("不能同时设置： output_ipa_path 与 re_suffix_name ")
+        raise ResignException("不能同时设置： output_ipa_path 与 re_suffix_name ")
 
     # 解析mobileprovision文件里的有效信息
     mp_model = parse_mobileprovision(mobileprovision_info)
     if not mp_model.date_is_valid():
-        raise Exception("mobileprovision 已过期")
+        raise ResignException("mobileprovision 已过期")
     # 查找p12文件的签名ID：sha1
     id_model_list = security.security_find_identity()
     valid_sha1_set = set((tmp_model.sha1 for tmp_model in id_model_list if tmp_model.is_valid))
     if not valid_sha1_set:
-        raise Exception("钥匙串里 不存在有效的签名证书sign!")
+        raise ResignException("钥匙串里 不存在有效的签名证书sign!")
     if sign:
         invalid_sha1_set = set(
             (tmp_model.sha1 for tmp_model in id_model_list if not tmp_model.is_valid))
         if sign in invalid_sha1_set:
-            raise Exception("sign对应于 钥匙串 里的证书，无效！")
+            raise ResignException("sign对应于 钥匙串 里的证书，无效！")
         if sign not in valid_sha1_set:
-            raise Exception("钥匙串 里的有效证书，不存在此sign: {}".format(sign))
+            raise ResignException("钥匙串 里的有效证书，不存在此sign: {}".format(sign))
     else:
         # 使用mobileprovision里第一个有效的证书
         for tmp_cer in mp_model.developer_certificates:
@@ -124,7 +130,7 @@ def resign(app_path, mobileprovision_info, sign=None, entitlements_path=None, ou
                 plog("\n* auto find, sign使用: {}, {}".format(sign, tmp_cer.common_name))
                 break
         else:
-            raise Exception("钥匙串里，不存在有效的mobileprovision里的cer证书")
+            raise ResignException("钥匙串里，不存在有效的mobileprovision里的cer证书")
 
     # 创建临时工作目录，将.app文件解压到此处，并重签名、打包操作
     with tempfile.TemporaryDirectory() as temp_dir_path:
@@ -153,7 +159,7 @@ def resign(app_path, mobileprovision_info, sign=None, entitlements_path=None, ou
             # 复制.app文件到此处
             shutil.copytree(app_path, dst_app_path)
         else:
-            raise Exception("不支持此文件类型: {}".format(app_path))
+            raise ResignException("不支持此文件类型: {}".format(app_path))
         plog("dst_app_path: {}".format(dst_app_path))
 
         # 检测App的BundleID 与 mobileprovision里的BundleID 是否一致
@@ -212,3 +218,24 @@ def resign(app_path, mobileprovision_info, sign=None, entitlements_path=None, ou
     if is_show_ipa:
         command = "open '{}'".format(output_ipa_path.parent)
         subprocess.call(command, shell=True)
+    return output_ipa_path
+
+
+def batch_resign(json_path):
+    file_content = Path(json_path).read_bytes()
+    info_obj = json.loads(file_content)
+    config_list = info_obj['list']
+
+    executor = ProcessPoolExecutor()
+    task_list = [executor.submit(resign, **params) for params in config_list]
+    print('wait task finish...')
+    result_list = []
+    for tmp_task in as_completed(task_list):
+        try:
+            tmp_result = tmp_task.result()
+            result_list.append(tmp_result)
+        except ResignException as e:
+            print(e)
+        except Exception as e:
+            print(e)
+    print(f'all task finish!:\n{result_list}')
