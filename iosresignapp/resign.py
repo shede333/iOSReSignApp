@@ -35,7 +35,8 @@ def zip_payload(payload_path, ipa_path):
     command = "zip -r '{}' 'Payload'".format(Path(ipa_path).resolve(), payload_path)
     plog(command)
     if util.IS_QUIET:
-        subprocess.check_output(command, shell=True, cwd=payload_path.parent)
+        subprocess.run(command, shell=True, check=True, capture_output=True,
+                       cwd=payload_path.parent)
     else:
         subprocess.check_call(command, shell=True, cwd=payload_path.parent)
 

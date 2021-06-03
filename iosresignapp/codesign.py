@@ -46,7 +46,7 @@ def run_codesign(dir_path, p12_id, entitlements_path=None):
         command += " --entitlements '{}'".format(entitlements_path)
     plog(command)
     # 实际上，这里的内容会输出终端，似乎是codesign的bug
-    subprocess.check_output(command, shell=True)
+    subprocess.run(command, shell=True, check=True, capture_output=True)
 
 
 def cs_app(app_path, p12_id, entitlements_path=None):
