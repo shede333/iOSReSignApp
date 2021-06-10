@@ -38,7 +38,6 @@ def parse_arg():
     batch_parser = subparsers.add_parser("batch_resign", help="批量重签")
     batch_parser.set_defaults(func=batch_resign)
     batch_parser.add_argument("json_path", help="重签信息json文件的路径")
-    batch_parser.add_argument("-q", "--quiet", action='store_true', help="是否隐藏print信息")
 
     args = parser.parse_args()
     return args

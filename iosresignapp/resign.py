@@ -23,7 +23,6 @@ from mobileprovision import util as mp_util
 
 from . import codesign
 from . import security
-from . import util
 from .util import plog
 
 
@@ -34,11 +33,7 @@ class ResignException(Exception):
 def zip_payload(payload_path, ipa_path):
     command = "zip -r '{}' 'Payload'".format(Path(ipa_path).resolve(), payload_path)
     plog(command)
-    if util.IS_QUIET:
-        subprocess.run(command, shell=True, check=True, capture_output=True,
-                       cwd=payload_path.parent)
-    else:
-        subprocess.check_call(command, shell=True, cwd=payload_path.parent)
+    subprocess.run(command, shell=True, check=True, capture_output=True, cwd=payload_path.parent)
 
 
 def safe_ipa_path(name_prefix, dst_dir, name_suffix=None):
