@@ -214,6 +214,7 @@ def resign(app_path, mobileprovision_info, sign=None, entitlements_path=None, ou
     if is_show_ipa:
         command = "open '{}'".format(output_ipa_path.parent)
         subprocess.call(command, shell=True)
+    print('', flush=True)
     return output_ipa_path
 
 
@@ -234,4 +235,4 @@ def batch_resign(json_path):
             print(e)
         except Exception as e:
             print(e)
-    print(f'all task finish!:\n{result_list}')
+    print(f'all task finish!\n{result_list}\n\n')
