@@ -18,6 +18,7 @@ from concurrent.futures import ProcessPoolExecutor, as_completed
 from pathlib import Path
 
 from iosappinfoparser import InfoPlistModel
+from iosappinfoparser.info_plist import change_app_display_name
 from mobileprovision import MobileProvisionModel
 from mobileprovision import util as mp_util
 
@@ -36,11 +37,11 @@ def zip_payload(payload_path, ipa_path):
     subprocess.run(command, shell=True, check=True, capture_output=True, cwd=payload_path.parent)
 
 
-def safe_ipa_path(name_prefix, dst_dir, name_suffix=None):
+def safe_ipa_path(dst_dir, name_prefix, name_suffix=None):
     """
     获取ipa文件路径，保证此路径不指向任何文件；
-    :param name_prefix: 文件名前缀（不包含扩展名）
     :param dst_dir: ipa文件存放的目录
+    :param name_prefix: 文件名前缀（不包含扩展名）
     :param name_suffix: （可选）文件名后缀
     :return: 路径对象
     """
@@ -173,7 +174,7 @@ def resign(app_path, mobileprovision_info, sign=None, entitlements_path=None, ou
                 info_model.set_value(tmp_key.strip(), tmp_value.strip())
         if set_app_name:
             plog("\n* 修改 App Name to '{}'".format(set_app_name))
-            info_model.app_display_name = set_app_name
+            change_app_display_name(dst_app_path, set_app_name)
         if set_app_version:
             plog("\n* 修改 App Version to '{}'".format(set_app_version))
             info_model.app_version = set_app_version
@@ -207,7 +208,7 @@ def resign(app_path, mobileprovision_info, sign=None, entitlements_path=None, ou
         if output_ipa_path:
             output_ipa_path = Path(output_ipa_path).resolve()
         else:
-            output_ipa_path = safe_ipa_path(app_path.stem, app_path.parent, re_suffix_name)
+            output_ipa_path = safe_ipa_path(app_path.parent, app_path.stem, re_suffix_name)
         zip_payload(payload_path, output_ipa_path)
 
     plog("\n* 重签名resign 成功！\nipa产物: {}".format(output_ipa_path))

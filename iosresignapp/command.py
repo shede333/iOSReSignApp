@@ -25,7 +25,7 @@ def parse_arg():
     single_parser.add_argument("-s", "--sign", help="(可选)签名证书的 SHA1或者name")
     single_parser.add_argument("-e", "--entitlements-path", help="(可选)entitlements环境plist文件")
     single_parser.add_argument("--re-suffix-name", default="resign",
-                               help="(可选)重签名后的文件名后缀，如果设置了'--output-ipa-path'，此选项无效，默认为'resign'")
+                               help="(可选)重签名后的文件名后缀，如果设置了'--output-ipa-path'，则此选项无效；默认为'resign'")
     single_parser.add_argument("-o", "--output-ipa-path", help="(可选)ipa文件输出路径，不传此值则输出到.app同级目录下")
     single_parser.add_argument("-q", "--quiet", action='store_true', help="是否隐藏print信息")
     single_parser.add_argument("-S", "--show-ipa", dest="is_show_ipa", action='store_true',
