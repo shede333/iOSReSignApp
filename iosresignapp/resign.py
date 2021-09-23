@@ -182,7 +182,9 @@ def resign(app_path, mobileprovision_info, sign=None, entitlements_path=None, ou
         # 嵌入mobileprovision文件
         dst_mp_path = dst_app_path.joinpath("embedded.mobileprovision")
         src_mp_path = mp_model.file_path
-        if src_mp_path and src_mp_path.is_file() and (not src_mp_path.samefile(dst_mp_path)):
+        if not dst_mp_path.is_file():
+            plog('app内没有 embedded.mobileprovision文件')
+        elif src_mp_path and src_mp_path.is_file() and (not src_mp_path.samefile(dst_mp_path)):
             plog("\n替换embedded.mobileprovision文件：{}".format(src_mp_path))
             shutil.copy(src_mp_path, dst_mp_path)
 
