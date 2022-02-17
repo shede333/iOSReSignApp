@@ -41,7 +41,7 @@ def cs_info(dir_path, is_verbose=False):
 
 def run_codesign(dir_path, p12_id, entitlements_path=None):
     # codesign --force --sign <keychain_SHA1> --entitlements <app_path> <entitlements_path>
-    command = "codesign -fs '{}' '{}' ".format(p12_id, dir_path)
+    command = "codesign --generate-entitlement-der -fs '{}' '{}' ".format(p12_id, dir_path)
     if entitlements_path:
         command += " --entitlements '{}'".format(entitlements_path)
     plog(command)
