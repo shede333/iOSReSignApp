@@ -69,7 +69,7 @@ def parse_mobileprovision(mobileprovision_info):
     :param mobileprovision_info: mobileprovision文件路径,或者Name属性,或者UUID属性
     :return:
     """
-    if mobileprovision_info.endswith(mp_util.MP_EXT_NAME):
+    if Path(mobileprovision_info).suffix.endswith(mp_util.MP_EXT_NAME):
         return MobileProvisionModel(mobileprovision_info)
 
     result = re.match(r"^([a-zA-Z]+):(.+)$", mobileprovision_info.strip())
