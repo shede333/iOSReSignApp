@@ -7,7 +7,6 @@ __author__ = 'shede333'
 import subprocess
 from pathlib import Path
 
-from . import util
 from .util import plog
 
 
@@ -54,7 +53,7 @@ def cs_app(app_path, p12_id, entitlements_path=None):
     for tmp_file_path in app_path.iterdir():
         if tmp_file_path.name == 'Frameworks':
             for sub_fw_path in tmp_file_path.iterdir():
-                if sub_fw_path.suffix == ".framework":
+                if sub_fw_path.suffix == ".framework" or sub_fw_path.suffix == ".dylib":
                     # 重签 framework
                     run_codesign(sub_fw_path, p12_id)
     # 重签 .app本身
