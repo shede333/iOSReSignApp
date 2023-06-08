@@ -25,6 +25,7 @@ from mobileprovision import util as mp_util
 from . import codesign
 from . import security
 from .util import plog
+from datetime import datetime
 
 
 class ResignException(Exception):
@@ -106,7 +107,11 @@ def resign(app_path, mobileprovision_info, sign=None, entitlements_path=None, ou
     # 解析mobileprovision文件里的有效信息
     mp_model = parse_mobileprovision(mobileprovision_info)
     if not mp_model.date_is_valid():
-        raise ResignException("mobileprovision 已过期")
+        profile_info = f"{mp_model.name}, {mp_model.app_id_name}, {mp_model.uuid}"
+        time_info = f"create time: {mp_model.creation_timestamp}, "
+        time_info += f"current utc time: {datetime.utcnow().timestamp()}, "
+        time_info += f"expiration time: {mp_model.expiration_timestamp}, "
+        raise ResignException(f"mobileprovision({profile_info}), 已过期: {time_info}")
     # 查找p12文件的签名ID：sha1
     id_model_list = security.security_find_identity()
     valid_sha1_set = set((tmp_model.sha1 for tmp_model in id_model_list if tmp_model.is_valid))
