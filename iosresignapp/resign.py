@@ -106,8 +106,8 @@ def resign(app_path, mobileprovision_info, sign=None, entitlements_path=None, ou
 
     # 解析mobileprovision文件里的有效信息
     mp_model = parse_mobileprovision(mobileprovision_info)
+    profile_info = f"{mp_model.name}, {mp_model.app_id_name}, {mp_model.uuid}"
     if not mp_model.date_is_valid():
-        profile_info = f"{mp_model.name}, {mp_model.app_id_name}, {mp_model.uuid}"
         time_info = f"create time: {mp_model.creation_timestamp}, "
         time_info += f"current utc time: {datetime.utcnow().timestamp()}, "
         time_info += f"expiration time: {mp_model.expiration_timestamp}, "
@@ -116,14 +116,14 @@ def resign(app_path, mobileprovision_info, sign=None, entitlements_path=None, ou
     id_model_list = security.security_find_identity()
     valid_sha1_set = set((tmp_model.sha1 for tmp_model in id_model_list if tmp_model.is_valid))
     if not valid_sha1_set:
-        raise ResignException("钥匙串里 不存在有效的签名证书sign!")
+        raise ResignException(f"钥匙串里 不存在有效的签名证书sign!{profile_info}")
     if sign:
         invalid_sha1_set = set(
             (tmp_model.sha1 for tmp_model in id_model_list if not tmp_model.is_valid))
         if sign in invalid_sha1_set:
             raise ResignException("sign对应于 钥匙串 里的证书，无效！")
         if sign not in valid_sha1_set:
-            raise ResignException("钥匙串 里的有效证书，不存在此sign: {}".format(sign))
+            raise ResignException(f"钥匙串 里的有效证书，不存在此sign: {sign}, {profile_info}")
     else:
         # 使用mobileprovision里第一个有效的证书
         for tmp_cer in mp_model.developer_certificates:
