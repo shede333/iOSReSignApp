@@ -121,7 +121,7 @@ def resign(app_path, mobileprovision_info, sign=None, entitlements_path=None, ou
         invalid_sha1_set = set(
             (tmp_model.sha1 for tmp_model in id_model_list if not tmp_model.is_valid))
         if sign in invalid_sha1_set:
-            raise ResignException("sign对应于 钥匙串 里的证书，无效！")
+            raise ResignException(f"sign对应于 钥匙串 里的证书，无效！{profile_info}")
         if sign not in valid_sha1_set:
             raise ResignException(f"钥匙串 里的有效证书，不存在此sign: {sign}, {profile_info}")
     else:
@@ -132,7 +132,7 @@ def resign(app_path, mobileprovision_info, sign=None, entitlements_path=None, ou
                 plog("\n* auto find, sign使用: {}, {}".format(sign, tmp_cer.common_name))
                 break
         else:
-            raise ResignException("钥匙串里，不存在有效的mobileprovision里的cer证书")
+            raise ResignException(f"钥匙串里，不存在有效的mobileprovision里的cer证书:{profile_info}")
 
     # 创建临时工作目录，将.app文件解压到此处，并重签名、打包操作
     with tempfile.TemporaryDirectory() as temp_dir_path:
